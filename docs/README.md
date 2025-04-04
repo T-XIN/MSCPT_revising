@@ -10,7 +10,7 @@ MSCPT: Few-shot Whole Slide Image Classification with Multi-scale and Context-fo
 **Abstract:** Multiple instance learning (MIL) has become a standard paradigm for weakly supervised classification of whole slide images (WSI). However, this paradigm relies on the use of a large number of labelled WSIs for training. The lack of training data and the presence of rare diseases present significant challenges for these methods. Prompt tuning combined with the pre-trained Vision-Language models (VLMs) is an effective solution to the Few-shot Weakly Supervised WSI classification (FSWC) tasks. Nevertheless, applying prompt tuning methods designed for natural images to WSIs presents three significant challenges: 1) These methods fail to fully leverage the prior knowledge from the VLM's text modality; 2) They overlook the essential multi-scale and contextual information in WSIs, leading to suboptimal results; and 3) They lack exploration of instance aggregation methods. To address these problems, we propose a Multi-Scale and Context-focused Prompt Tuning (**MSCPT**) method for FSWC tasks. Specifically, MSCPT employs the frozen large language model to generate pathological visual language prior knowledge at multi-scale, guiding hierarchical prompt tuning. Additionally, we design a graph prompt tuning module to learn essential contextual information within WSI, and finally, a non-parametric cross-guided instance aggregation module has been introduced to get the WSI-level features. Extensive experiments, visualizations, and interpretability analyses were conducted on five datasets and three downstream tasks using three VLMs, demonstrating the strong performance of our MSCPT.
 
 
-
+---
 
 <img src="overall.png" scaledwidth="100%" align="center" />
 
@@ -49,7 +49,7 @@ The **stitches** folder contains downsampled visualizations of stitched tissue p
 The auto-generated csv file **process_list_autogen.csv** contains a list of all slides processed, along with their segmentation/patching parameters used.
 
 ## Feature Extraction
-In this paper, visual prompt tuning is not applied to the patches at 20x magnification. Instead, pre-extracted features from these patches are used as the visual input under 20x magnification. The feature extraction process follows the [CLAM](https://github.com/mahmoodlab/CLAM/blob/master/docs/README.md) framework. Notably, we utilize [PLIP](https://github.com/PathologyFoundation/plip) and [CLIP(ViT-B/16)](https://github.com/openai/CLIP) as feature extractors, requiring modifications to the original code. Upon completion of the feature extraction, you will obtain files with the following data structures:
+In this paper, visual prompt tuning is not applied to the patches at 20x magnification. Instead, pre-extracted features from these patches are used as the visual input under 20x magnification. The feature extraction process follows the [CLAM](https://github.com/mahmoodlab/CLAM/blob/master/docs/README.md) framework. Notably, we utilize [PLIP](https://github.com/PathologyFoundation/plip), [CLIP(ViT-B/16)](https://github.com/openai/CLIP) and [CONCH](https://github.com/mahmoodlab/CONCH) as feature extractors, requiring modifications to the original code. Upon completion of the feature extraction, you will obtain files with the following data structures:
 
 ```bash
 FEATURES_DIRECTORY/
@@ -94,5 +94,14 @@ To facilitate the replication of our method, we wrote the `.sh` files for the th
 bash scripts/mscpt/train_my_brca.sh 0
 ```
 Note that you need to enter your SELECTED_PATCHES_DIRECTORY and FEATURES_DIRECTORY in the corresponding `.sh` file.
-## Funding
+## Acknowledgements
 This project was funded by the National Natural Science Foundation of China 82090052.
+If you find our work useful in your research or if you use parts of this code please cite our paper:
+```bibtext
+@article{han2024mscpt,
+  title={MSCPT: Few-shot Whole Slide Image Classification with Multi-scale and Context-focused Prompt Tuning},
+  author={Han, Minghao and Qu, Linhao and Yang, Dingkang and Zhang, Xukun and Wang, Xiaoying and Zhang, Lihua},
+  journal={arXiv preprint arXiv:2408.11505},
+  year={2024}
+}
+```
