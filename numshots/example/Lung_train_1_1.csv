@@ -1,0 +1,3 @@
+slide_id,case_id,project_id,Diagnosis,OncoTreeCode,level0_mag
+TCGA-MN-A4N5-01Z-00-DX1.D0FBA0D2-6245-4EFD-AF2B-849215600DBE,TCGA-MN-A4N5,TCGA-LUAD,Lung Adenocarcinoma,LUAD,40
+TCGA-77-8007-01Z-00-DX1.06f0e4a1-936d-4bc2-acbf-cfec25fed190,TCGA-77-8007,TCGA-LUSC,Lung Squamous Cell Carcinoma,LUSC,40
