@@ -1,4 +1,4 @@
-MSCPT 
+MSCPT （IEEE TMI 2025）
 ===========
 MSCPT: Few-shot Whole Slide Image Classification with Multi-scale and Context-focused Prompt Tuning.
 
