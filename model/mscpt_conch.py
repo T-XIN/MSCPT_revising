@@ -11,7 +11,7 @@ import os
 def create_model(
     model_name: str,
     override_image_size = 224,
-    pretrain_path = "path/to/weights"
+    pretrain_path = "checkpoints/conch/pytorch_model.bin"
     ):  
     model = create_model_from_pretrained("conch_ViT-B-16", 
                                  checkpoint_path=pretrain_path, 

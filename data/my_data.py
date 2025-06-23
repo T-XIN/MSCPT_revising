@@ -100,7 +100,7 @@ class MyData(data.Dataset):
             slide_id = str(slide_id)
         label = self.get_labels(idx)
         project_id = self.get_project_id(idx)
-        pt_path = os.path.join(self.feat_data_dir, project_id, self.base_model + '_20', slide_id+'.pt')
+        pt_path = os.path.join(self.feat_data_dir, project_id, self.base_model, slide_id+'.pt')
         pt_path = pt_path.replace('clip', 'ViT-B-16')
         cla_pt = torch.load(pt_path)
 
@@ -108,11 +108,16 @@ class MyData(data.Dataset):
             label = self.label_dicts[label]
         cla_img = []
         nums = glob.glob(os.path.join(self.data_dir, slide_id, '*'))
+        from PIL import ImageFile
+        ImageFile.LOAD_TRUNCATED_IMAGES = True
         for num in nums:
             if  num[-3:] == 'png':
                 img = Image.open(num).convert('RGB')
                 img = self.roi_transforms(img)
                 cla_img.append(img)
+
+        if len(cla_img) == 0:
+            raise RuntimeError(f"cla_img is empty for index {idx}")
         cla_img = torch.stack(cla_img)#.view(len(self.label_dicts), len(tissue_types), len(nums)//2, img.shape[0], img.shape[1], img.shape[2])
 
         return (cla_img, cla_pt), label, slide_id

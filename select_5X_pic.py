@@ -58,18 +58,23 @@ def load_ctranspath_clip(model_name, ckpt_path, img_size = 224, return_trsforms 
     elif model_name == 'conch':
         from conch.open_clip_custom import create_model_from_pretrained
         model, trsforms = create_model_from_pretrained("conch_ViT-B-16", 
-                                checkpoint_path="path/to/weights", 
+                                checkpoint_path="./checkpoints/conch/pytorch_model.bin",
                                 force_image_size=img_size)
         if return_trsforms:
             return model, trsforms
     return model
 
 
-def file_exists(df, root, ext = '.h5'):
+def file_exists(df, root, ext='.h5'):
     file_id = df['slide_id']
     if type(file_id) != str:
         file_id = str(file_id)
-    df['has_h5'] = os.path.isfile(os.path.join(root, file_id + ext))
+
+    filename = f"{file_id}_patches{ext}"
+    full_path = os.path.join(root, filename)
+    exists = os.path.isfile(full_path)
+    print(f"Checking: {full_path} -> Exists? {exists}")
+    df['has_h5'] = exists
     return df
 
 
@@ -128,14 +133,14 @@ def extract_features(df, model_name, model, wsi_ext = '.svs', pt_path='', device
         wsi_path = os.path.join(wsi_source, slide_id + wsi_ext)
         pt_file_path = os.path.join(pt_path, df['project_id'], model_name+'_5', slide_id + '.pt')
     else:
-        wsi_path = os.path.join(wsi_source, df['project_id'].split('-')[-1], slide_id + wsi_ext)
-        pt_file_path = os.path.join(pt_path, df['project_id'].split('-')[-1], model_name+'_5', slide_id + '.pt')
+        wsi_path = os.path.join(wsi_source, slide_id + wsi_ext)
+        pt_file_path = os.path.join(pt_path, slide_id + '.pt')
     wsi = openslide.open_slide(wsi_path)
     pt_file_path = pt_file_path.replace('clip', 'ViT-B-16')
-    features = torch.load(pt_file_path).to(device)
+    features = torch.from_numpy(torch.load(pt_file_path, weights_only=False)).to(device)
     patch_level = df['patch_level']
     patch_size = df['patch_size']
-    h5_path = os.path.join(h5_source, slide_id + '.h5')
+    h5_path = os.path.join(h5_source, slide_id + '_patches.h5')
     assets, _ = read_assets_from_h5(h5_path)
     return_coords = assets['coords']
     print(f'slide_id: {slide_id}, n_patches: {len(return_coords)}')
@@ -161,7 +166,7 @@ parser.add_argument('--ckpt_path', type=str, help='path to clip ckpt')
 parser.add_argument('--device', type=str, default='cuda:0', help='device cuda:n')
 parser.add_argument('--model_name', type=str, default='conch')
 parser.add_argument('--gpt_data', type=str, default='./train_data/gpt/description')
-parser.add_argument('--top_k', type=int, default=10) # 10 for UBC_OCEAN, 30 for others
+parser.add_argument('--top_k', type=int, default=30) # 10 for UBC_OCEAN, 30 for others
 parser.add_argument('--split', type=str, default='')
 parser.add_argument('--dataset_name', type=str, default='UBC-OCEAN', choices=['Lung', 'RCC', 'BRCA', 'UBC-OCEAN', 'PANDA'])
 args = parser.parse_args()
@@ -226,7 +231,7 @@ if __name__ == '__main__':
     wsi_source = args.wsi_source
     ckpt_path = args.ckpt_path
     device = args.device 
-    prompt_file = os.path.join(args.gpt_data,f'{args.dataset_name.upper()}_select_pic.json')
+    prompt_file = os.path.join(args.gpt_data, f'{args.dataset_name.upper()}_select_pic.json')
     with open(prompt_file, 'r') as pf: 
         prompts = json.load(pf)
 
@@ -238,7 +243,7 @@ if __name__ == '__main__':
     # Load tokenizer
     tokenizer = load_pretrained_tokenizer(args.model_name)
     all_weights = []
-    prompts = [prompts[str(prompt_idx)] for prompt_idx in range(100)]
+    prompts = [prompts[str(prompt_idx)] for prompt_idx in range(50)]
     for prompt in prompts:
         # Your code here
         classnames = prompt['classnames']
@@ -273,7 +278,7 @@ if __name__ == '__main__':
         split_list = project_dic[args.dataset_name]
     else:
         split_list = [args.split]
-    args.save_dir = os.path.join(args.save_dir, args.model_name, args.dataset_name, 'K_100')
+    args.save_dir = os.path.join(args.save_dir, args.model_name, 'K_30')
     for args.split in split_list:
         df = pd.read_csv(csv_path)
         if args.split == 'KIRC':
@@ -287,7 +292,8 @@ if __name__ == '__main__':
         elif args.split == 'LUSC':
             df = df[df['project_id']=='TCGA-LUSC']
         assert 'level0_mag' in df.columns, 'level0_mag column missing'
-        h5_source = os.path.join(args.h5_source, args.split + '_5/patches')
+        # h5_source = os.path.join(args.h5_source, args.split + '_5/patches')
+        h5_source = args.h5_source
         df = df.apply(lambda x: file_exists(x, h5_source), axis=1)
         df['has_h5'].value_counts()
         # df['has_slide'] = df['slide_id'].apply(lambda x: file_exists(x, wsi_source, ext='.svs'))
@@ -297,7 +303,7 @@ if __name__ == '__main__':
         assert df['has_h5'].sum() == len(df['has_h5'])
         # assert df['has_slide'].sum() == len(df['has_slide'])
         df['pred'] = np.nan 
-        df = df.apply(lambda x: compute_patch_args(x, target_mag = 5, patch_size = 256), axis=1)
+        df = df.apply(lambda x: compute_patch_args(x, target_mag = 5, patch_size = 512), axis=1)
         if not os.path.exists(args.save_dir):
             os.makedirs(args.save_dir)
 
@@ -327,6 +333,6 @@ if __name__ == '__main__':
             df.loc[idx, 'pred'] = 1 if pred == category else 0  # 进行赋值
             for idx, (x,y) in enumerate(coord):
                 big_img = wsi.read_region((x,y), patch_level, (patch_size, patch_size)).convert('RGB')
-                big_img = big_img.resize((224,224))
+                big_img = big_img.resize((512, 512))
                 big_img.save(os.path.join(save_path, f"score_{scores[idx]:.4f}_{idx}_{x}_{y}.png"))
         df.to_csv(f'./{args.split}_result_{args.model_name}.csv', index=False)

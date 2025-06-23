@@ -87,7 +87,7 @@ def main(args):
     'a photomicrograph of CLASSNAME.',
     'an image of CLASSNAME.',
     'an image showing CLASSNAME.', 
-    'an example of CLASSNAME.',
+    'an Lung of CLASSNAME.',
     'CLASSNAME is shown.',
     'this is CLASSNAME.',
     'there is CLASSNAME.',

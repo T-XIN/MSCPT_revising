@@ -86,7 +86,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', default=11, type=int)
     parser.add_argument('--lr', default=1e-4, type=float)
     parser.add_argument('--use_gpu', default=True, type=bool, help='use cpu or gpu')
-    parser.add_argument('--device_ids' ,default=[0])
+    parser.add_argument('--device_ids', default=[0])
     parser.add_argument('--num_shots', default=16, type=int, help='num of few-shot')
     parser.add_argument('--total_epochs', default=30, type=int, help='num of epochs')
 
